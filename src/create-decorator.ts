@@ -45,8 +45,6 @@ export const createDecorator = (
         writable: false,
       });
       Object.setPrototypeOf(descriptor.value, originalFn);
-
-      return descriptor;
     },
   );
 };
