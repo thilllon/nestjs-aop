@@ -7,5 +7,7 @@ export const ASPECT = Symbol('ASPECT');
  * @see LazyDecorator
  */
 export function Aspect(metadataKey: string | symbol) {
-  return applyDecorators(SetMetadata(ASPECT, metadataKey), Injectable);
+  // NOTE: `Injectable` must be invoked. Passing `Injectable` itself will treat
+  // the class as "options" and won't apply the injectable decorator.
+  return applyDecorators(SetMetadata(ASPECT, metadataKey), Injectable());
 }
