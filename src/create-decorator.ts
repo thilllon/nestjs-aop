@@ -25,7 +25,10 @@ export const createDecorator = (
       const originalFn = descriptor.value;
 
       descriptor.value = function (this: any, ...args: unknown[]) {
-        const wrappedFn = this[aopSymbol]?.[propertyKey];
+        // `this` can be undefined/null when a method is called unbound.
+        // In that case, we should behave like the original method (not throw).
+        const receiver = this as any;
+        const wrappedFn = receiver?.[aopSymbol]?.[propertyKey];
         if (wrappedFn) {
           // If there is a wrapper stored in the method, use it
           return wrappedFn.apply(this, args);
@@ -40,10 +43,16 @@ export const createDecorator = (
        *
        * ex) @nestjs/swagger
        */
-      Object.defineProperty(descriptor.value, 'name', {
-        value: propertyKey.toString(),
-        writable: false,
-      });
+      // Make it safe to stack multiple decorators that attempt to set `name`.
+      try {
+        Object.defineProperty(descriptor.value, 'name', {
+          value: propertyKey.toString(),
+          writable: false,
+          configurable: true,
+        });
+      } catch {
+        // ignore
+      }
       Object.setPrototypeOf(descriptor.value, originalFn);
     },
   );

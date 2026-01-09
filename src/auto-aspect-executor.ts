@@ -98,20 +98,26 @@ export class AutoAspectExecutor implements OnModuleInit {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
     const wrappedFn = function (this: object, ...args: unknown[]) {
-      const cache = self.wrappedMethodCache.get(this) || new WeakMap();
-      const cached = cache.get(originalFn);
+      // WeakMap keys must be objects. If someone calls the method with a
+      // primitive receiver (e.g. `.call('x')`) or unbound (`this` is undefined),
+      // we must not throw here.
+      const isCacheableReceiver = typeof this === 'object' && this !== null;
+      const cache = isCacheableReceiver ? (self.wrappedMethodCache.get(this) || new WeakMap()) : null;
+      const cached = cache?.get(originalFn);
       if (cached) {
         return cached.apply(this, args);
       }
 
       const wrappedMethod = lazyDecorator.wrap({
-        instance: this,
+        instance: this as any,
         methodName,
         method: originalFn.bind(this),
         metadata,
       });
-      cache.set(originalFn, wrappedMethod);
-      self.wrappedMethodCache.set(this, cache);
+      if (cache) {
+        cache.set(originalFn, wrappedMethod);
+        self.wrappedMethodCache.set(this, cache);
+      }
       return wrappedMethod.apply(this, args);
     };
 
