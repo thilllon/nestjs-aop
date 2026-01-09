@@ -99,9 +99,8 @@ export class AutoAspectExecutor implements OnModuleInit {
     const self = this;
     const wrappedFn = function (this: object, ...args: unknown[]) {
       const cache = self.wrappedMethodCache.get(this) || new WeakMap();
-      const cached = cache.get(originalFn);
-      if (cached) {
-        return cached.apply(this, args);
+      if (cache.has(originalFn)) {
+        return cache.get(originalFn).apply(this, args);
       }
 
       const wrappedMethod = lazyDecorator.wrap({
