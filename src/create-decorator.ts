@@ -41,7 +41,7 @@ export const createDecorator = (
        * ex) @nestjs/swagger
        */
       Object.defineProperty(descriptor.value, 'name', {
-        value: propertyKey.toString(),
+        value: typeof propertyKey === 'symbol' ? (propertyKey.description ?? '') : propertyKey,
         writable: false,
       });
       Object.setPrototypeOf(descriptor.value, originalFn);
